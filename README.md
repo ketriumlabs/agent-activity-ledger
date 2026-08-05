@@ -58,6 +58,12 @@ curl -X POST http://127.0.0.1:8420/v1/events \
 | MCP | `pip install "agent-activity-ledger[mcp]"` then point any MCP client at `ledger-mcp`. |
 | Anything else | `POST /v1/events`, see [`integrations/curl.md`](integrations/curl.md). |
 
+Prefer not to touch your hooks config? `ledger import-claude-code` pulls tool-use activity
+straight out of Claude Code's own local session transcripts
+(`~/.claude/projects/**/*.jsonl`) instead — no wiring required. Safe to re-run any time
+(new activity only, never double-counted): each event's idempotency key is the
+transcript's own tool_use id.
+
 ## Configuration
 
 | Env var | Default | Purpose |

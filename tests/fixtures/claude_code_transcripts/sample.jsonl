@@ -1,0 +1,5 @@
+{"type": "user", "sessionId": "11111111-1111-1111-1111-111111111111", "timestamp": "2026-06-29T09:35:40.000Z", "message": {"role": "user", "content": "please write a file"}}
+{"type": "assistant", "sessionId": "11111111-1111-1111-1111-111111111111", "timestamp": "2026-06-29T09:35:41.000Z", "message": {"model": "claude-sonnet-5", "role": "assistant", "content": [{"type": "thinking", "thinking": "ok"}]}}
+this is not valid json at all
+{"type": "assistant", "sessionId": "11111111-1111-1111-1111-111111111111", "timestamp": "2026-06-29T09:35:42.000Z", "message": {"model": "claude-sonnet-5", "role": "assistant", "content": [{"type": "tool_use", "id": "toolu_01AAA", "name": "Write", "input": {"file_path": "/tmp/example.txt", "content": "hello"}}]}}
+{"type": "assistant", "sessionId": "11111111-1111-1111-1111-111111111111", "timestamp": "2026-06-29T09:35:43.000Z", "message": {"model": "claude-sonnet-5", "role": "assistant", "content": [{"type": "tool_use", "id": "toolu_01BBB", "name": "Bash", "input": {"command": "ls -la", "description": "List files"}}, {"type": "tool_use", "id": "toolu_01CCC", "name": "Read", "input": {"file_path": "/tmp/example.txt"}}]}}

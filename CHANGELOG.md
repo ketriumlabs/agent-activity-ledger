@@ -27,8 +27,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - OpenSSF Scorecard workflow (weekly + on push to main), results published
   to the Scorecard API and uploaded to code scanning.
 - README badges (CI, PyPI, Docker/GHCR, OpenSSF Scorecard, license).
+- `ledger import-claude-code`: a pull-based counterpart to the push-based
+  Claude Code hook integration. Reads tool-use activity directly out of
+  Claude Code's own local session transcripts
+  (`~/.claude/projects/**/*.jsonl`) and imports it into the ledger — no
+  hooks config needed. Idempotent by construction: each event's dedup key
+  is the transcript's own stable tool_use id, so re-running only imports
+  new activity. Verified against real local transcript data (134k+ events
+  across this machine's actual Claude Code history), including that the
+  hash chain still verifies clean afterward and a second run correctly
+  found zero duplicates.
 
 ### Fixed
+- `sys.stdout.reconfigure(encoding="utf-8")` for Windows-console output was
+  only ever wired into `main()`, but the installed `ledger` console script
+  (per `pyproject.toml`) calls the Typer `app` object directly and never
+  goes through `main()` — so the fix was dead code for the actual CLI.
+  Moved to module import time. Found while testing `ledger verify`'s
+  output for real on Windows, not by inspection.
 - `docker compose up`, as literally documented in the README quickstart,
   didn't actually start in demo mode (`compose.yaml` defaulted `DEMO` to
   empty) — unlike the `docker run -e DEMO=1 ...` one-liner right above it.
