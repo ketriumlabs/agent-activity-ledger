@@ -26,8 +26,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   gets an SPDX SBOM (syft).
 - OpenSSF Scorecard workflow (weekly + on push to main), results published
   to the Scorecard API and uploaded to code scanning.
+- README badges (CI, PyPI, Docker/GHCR, OpenSSF Scorecard, license).
 
 ### Fixed
+- `docker compose up`, as literally documented in the README quickstart,
+  didn't actually start in demo mode (`compose.yaml` defaulted `DEMO` to
+  empty) — unlike the `docker run -e DEMO=1 ...` one-liner right above it.
+  `compose.yaml` now defaults to demo mode too; run `DEMO=0 docker compose
+  up` for a real instance. Found by walking the quickstart end-to-end.
 - `GET /v1/events` with a malformed query param (e.g. `ts_to=null`) returned
   FastAPI's default `{"detail": [...]}` shape instead of RFC 9457
   problem+json; `RequestValidationError` now has its own handler.

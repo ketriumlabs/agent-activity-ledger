@@ -6,7 +6,10 @@ services:
       - "8420:8420"
     environment:
       - LEDGER_HOST=0.0.0.0
-      - DEMO=${DEMO:-}
+      # Defaults to demo mode so `docker compose up` matches the README
+      # quickstart's `docker run -e DEMO=1 ...` one-liner. Run a real
+      # instance with `DEMO=0 docker compose up`.
+      - DEMO=${DEMO:-1}
       # - LEDGER_SMTP_HOST=smtp.example.com
       # - LEDGER_SMTP_USER=
       # - LEDGER_SMTP_PASSWORD=

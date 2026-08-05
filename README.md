@@ -1,5 +1,11 @@
 # Agent Activity Ledger
 
+[![CI](https://github.com/ketriumlabs/agent-activity-ledger/actions/workflows/ci.yml/badge.svg)](https://github.com/ketriumlabs/agent-activity-ledger/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/agent-activity-ledger)](https://pypi.org/project/agent-activity-ledger/)
+[![Docker](https://img.shields.io/badge/ghcr.io-agent--activity--ledger-blue?logo=docker)](https://github.com/ketriumlabs/agent-activity-ledger/pkgs/container/agent-activity-ledger)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/ketriumlabs/agent-activity-ledger/badge)](https://scorecard.dev/viewer/?uri=github.com/ketriumlabs/agent-activity-ledger)
+[![License](https://img.shields.io/github/license/ketriumlabs/agent-activity-ledger)](LICENSE)
+
 **A self-hosted bank statement for everything your AI agents did on your behalf.**
 
 Booked a flight. Sent an email. Bought a replacement charger. If your agents act for you, you deserve one clean, tamper-evident timeline of what happened — not a vendor dashboard, not a log file you'll never read.
