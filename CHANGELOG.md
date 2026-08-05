@@ -16,6 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `pre-commit install`.
 - `uv.lock` committed for reproducible installs; CI now fails if it drifts
   from `pyproject.toml` (`uv lock --check`).
+- Release automation: `release-please` opens the version-bump PR; on
+  publish, `publish.yml` builds the sdist/wheel and publishes to PyPI via
+  Trusted Publishing (OIDC, no stored token), and builds/pushes a
+  multi-arch (amd64+arm64) Docker image to
+  `ghcr.io/ketriumlabs/agent-activity-ledger` tagged `latest`/`X.Y.Z`/`X.Y`.
+  Both the PyPI artifacts and the Docker image get build-provenance
+  attestations (`actions/attest-build-provenance`); the Docker image also
+  gets an SPDX SBOM (syft).
 
 ### Fixed
 - `GET /v1/events` with a malformed query param (e.g. `ts_to=null`) returned
