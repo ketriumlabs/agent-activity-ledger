@@ -68,7 +68,9 @@ async def test_ingest_rejects_client_supplied_hash(client: httpx.AsyncClient) ->
     resp = await client.post(
         "/v1/events", json=payload, headers={"Authorization": "Bearer test-key"}
     )
-    assert resp.status_code == 400
+    # 422, not 400: matches FastAPI's auto-documented validation-error status
+    # for this endpoint — see errors.py's validation_problem() docstring.
+    assert resp.status_code == 422
 
 
 async def test_ingest_batch(client: httpx.AsyncClient) -> None:
@@ -118,3 +120,31 @@ async def test_timeline_ui_renders(client: httpx.AsyncClient) -> None:
     resp = await client.get("/")
     assert resp.status_code == 200
     assert "Agent Activity Ledger" in resp.text
+
+
+async def test_query_param_validation_error_uses_problem_json(client: httpx.AsyncClient) -> None:
+    """Regression test: found by schemathesis fuzzing the live OpenAPI spec.
+    A query-param coercion failure (FastAPI's own RequestValidationError,
+    raised before our route handler ever runs) used to return FastAPI's
+    default `{"detail": [...]}` shape instead of our RFC 9457 problem+json
+    format — see errors.py's request_validation_error_handler."""
+    resp = await client.get(
+        "/v1/events?ts_to=not-a-real-datetime", headers={"Authorization": "Bearer test-key"}
+    )
+    assert resp.status_code == 422
+    assert resp.headers["content-type"] == "application/problem+json"
+    body = resp.json()
+    assert body["title"] == "Unprocessable Content"
+    assert body["status"] == 422
+
+
+async def test_ingest_empty_body_returns_422_matching_documented_contract(
+    client: httpx.AsyncClient,
+) -> None:
+    """Regression test: found by schemathesis. An empty-object body used to
+    return 400, but FastAPI's auto-generated OpenAPI spec for this endpoint
+    only documents 201/422 — the actual behavior silently diverged from the
+    published contract."""
+    resp = await client.post("/v1/events", json={}, headers={"Authorization": "Bearer test-key"})
+    assert resp.status_code == 422
+    assert resp.headers["content-type"] == "application/problem+json"

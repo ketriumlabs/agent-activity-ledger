@@ -34,6 +34,45 @@ jobs:
       - name: Validate agent-event schema examples
         run: python scripts/validate_schema_examples.py
 
+  fuzz-api:
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2 # v5
+        with:
+          python-version: "3.12"
+      - name: Install uv
+        uses: astral-sh/setup-uv@f0ec1fc3b38f5e7cd731bb6ce540c5af426746bb # v5
+      - name: Install dependencies
+        run: uv pip install --system -e ".[dev]"
+      - name: Start demo server
+        run: |
+          ledger serve --demo --port 8420 &
+          for i in $(seq 1 20); do
+            if curl -sf http://127.0.0.1:8420/healthz; then break; fi
+            sleep 1
+          done
+          curl -sf http://127.0.0.1:8420/healthz
+      - name: Fuzz OpenAPI surface (schemathesis)
+        # positive_data_acceptance is excluded for two known upstream false
+        # positives, not a blanket bypass: (1) OpenAPI/JSON Schema `format`
+        # is advisory, not enforced, so a literal string like "null" for a
+        # `format: date-time` query param is "schema-compliant" even though
+        # our datetime parser correctly rejects it; (2) pydantic's
+        # auto-generated Decimal regex is Unicode-digit-permissive (matches
+        # e.g. Devanagari digits) while `decimal.Decimal()` only accepts
+        # ASCII digits, so schemathesis can generate "compliant" numeric
+        # strings that legitimately fail to parse. All other checks
+        # (negative_data_rejection, response/status/content-type
+        # conformance, server errors) still run.
+        run: |
+          st run http://127.0.0.1:8420/openapi.json \
+            --header "Authorization: Bearer demo" \
+            --checks all \
+            --exclude-checks positive_data_acceptance \
+            --max-examples 100
+
   docker-smoke-test:
     runs-on: ubuntu-latest
     needs: lint-and-test

@@ -14,6 +14,53 @@ router = APIRouter(tags=["ingest"])
 
 MAX_BATCH = 100
 
+# The handler takes a raw dict/list (not `EventIn`) so a batch can partially
+# succeed with per-item errors instead of FastAPI rejecting the whole request
+# on the first invalid item. That leaves FastAPI's auto-generated OpenAPI
+# schema for the body as an unconstrained object/array, which schemathesis
+# flags as a contract violation (it generates `{}` or garbage-keyed objects,
+# sees they match the documented "any object" schema, then gets a real 422
+# from EventIn's actual validation). Declaring the true schema here keeps the
+# docs honest and gives fuzzers realistic instances to generate from.
+#
+# ref_template points nested model refs (Actor, Action, ...) at
+# #/components/schemas/* instead of the default #/$defs/* — the latter only
+# resolves from within this schema's own document, but this schema gets
+# spliced into the paths section of the full OpenAPI document by app.py's
+# custom openapi(), where #/$defs/* wouldn't resolve. EXTRA_COMPONENT_SCHEMAS
+# is merged into components.schemas there so the refs work; INGEST_REQUEST_BODY
+# fully replaces (not openapi_extra-merges with) FastAPI's auto-generated
+# requestBody, since openapi_extra deep-merges dicts and would otherwise
+# leave FastAPI's permissive auto `anyOf` sitting as a sibling of our
+# precise `oneOf` — a value then has to satisfy both.
+_EVENT_SCHEMA = EventIn.model_json_schema(ref_template="#/components/schemas/{model}")
+EXTRA_COMPONENT_SCHEMAS: dict[str, Any] = _EVENT_SCHEMA.pop("$defs", {})
+EXTRA_COMPONENT_SCHEMAS["EventIn"] = _EVENT_SCHEMA
+
+INGEST_REQUEST_BODY = {
+    "required": True,
+    "content": {
+        "application/json": {
+            "schema": {
+                "oneOf": [
+                    {"$ref": "#/components/schemas/EventIn"},
+                    # Batch items are intentionally best-effort: an item that
+                    # fails EventIn validation is reported per-index in the
+                    # response's `errors` array rather than rejecting the
+                    # whole batch, so array items can't be documented as
+                    # strictly EventIn-shaped without contradicting that
+                    # 201-with-partial-errors behavior.
+                    {
+                        "type": "array",
+                        "items": {"type": "object", "additionalProperties": True},
+                        "maxItems": MAX_BATCH,
+                    },
+                ]
+            }
+        }
+    },
+}
+
 
 class EventOut(BaseModel):
     id: str

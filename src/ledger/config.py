@@ -3,22 +3,34 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 
 @dataclass(frozen=True)
 class Settings:
-    host: str = os.environ.get("LEDGER_HOST", "127.0.0.1")
-    port: int = int(os.environ.get("LEDGER_PORT", "8420"))
-    data_dir: Path = Path(os.environ.get("LEDGER_DATA_DIR", "./data"))
-    demo: bool = os.environ.get("DEMO", "").lower() in ("1", "true", "yes")
+    # Defaults are read via default_factory, not bare `os.environ.get(...)`:
+    # a dataclass field default expression runs once at class-definition
+    # time (module import), so a bare default would freeze in whatever env
+    # vars existed at first import and silently ignore any env var set
+    # later — e.g. `ledger serve --port 8421`, which sets LEDGER_PORT right
+    # before constructing Settings().
+    host: str = field(default_factory=lambda: os.environ.get("LEDGER_HOST", "127.0.0.1"))
+    port: int = field(default_factory=lambda: int(os.environ.get("LEDGER_PORT", "8420")))
+    data_dir: Path = field(
+        default_factory=lambda: Path(os.environ.get("LEDGER_DATA_DIR", "./data"))
+    )
+    demo: bool = field(
+        default_factory=lambda: os.environ.get("DEMO", "").lower() in ("1", "true", "yes")
+    )
 
-    smtp_host: str | None = os.environ.get("LEDGER_SMTP_HOST")
-    smtp_port: int = int(os.environ.get("LEDGER_SMTP_PORT", "587"))
-    smtp_user: str | None = os.environ.get("LEDGER_SMTP_USER")
-    smtp_password: str | None = os.environ.get("LEDGER_SMTP_PASSWORD")
-    digest_to: str | None = os.environ.get("LEDGER_DIGEST_TO")
+    smtp_host: str | None = field(default_factory=lambda: os.environ.get("LEDGER_SMTP_HOST"))
+    smtp_port: int = field(default_factory=lambda: int(os.environ.get("LEDGER_SMTP_PORT", "587")))
+    smtp_user: str | None = field(default_factory=lambda: os.environ.get("LEDGER_SMTP_USER"))
+    smtp_password: str | None = field(
+        default_factory=lambda: os.environ.get("LEDGER_SMTP_PASSWORD")
+    )
+    digest_to: str | None = field(default_factory=lambda: os.environ.get("LEDGER_DIGEST_TO"))
 
     @property
     def db_path(self) -> Path:

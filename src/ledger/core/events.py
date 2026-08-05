@@ -11,7 +11,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 ActionType = Literal[
     "purchase",
@@ -45,7 +45,13 @@ class Action(BaseModel):
 class Amount(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    value: Decimal
+    # max_digits/decimal_places bound a monetary value to something a real
+    # transaction could have. Without them an unbounded Decimal accepts
+    # extreme magnitudes (e.g. ~2.2e-308) whose Python str() form switches
+    # to scientific notation — which round-trips through storage fine but
+    # doesn't match the plain-decimal regex pydantic documents in the
+    # OpenAPI schema for this field. Found by schemathesis fuzzing.
+    value: Decimal = Field(max_digits=14, decimal_places=4)
     currency: str = Field(min_length=3, max_length=3)
 
 
@@ -69,6 +75,21 @@ class EventIn(BaseModel):
     justification: str | None = Field(default=None, max_length=2000)
     source: Source
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("ts", mode="before")
+    @classmethod
+    def _ts_rejects_numeric_timestamps(cls, v: object) -> object:
+        # Pydantic's default datetime coercion also accepts a bare number as
+        # a Unix timestamp, but the OpenAPI/JSON schema documents `ts` as
+        # `type: string, format: date-time` — accepting a number would be an
+        # undocumented, ambiguous input (seconds vs. milliseconds?) for an
+        # audit ledger where the timestamp is part of what's being attested.
+        # Found by schemathesis fuzzing the live API. `datetime` instances
+        # (constructed directly by internal Python code, not from JSON) and
+        # ISO strings (the documented client input) both still pass through.
+        if isinstance(v, int | float):
+            raise ValueError("ts must be an ISO 8601 datetime string, not a numeric timestamp")
+        return v
 
     def metadata_size_bytes(self) -> int:
         import json
