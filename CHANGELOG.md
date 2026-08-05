@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0](https://github.com/ketriumlabs/agent-activity-ledger/compare/agent-activity-ledger-v0.1.0...agent-activity-ledger-v0.2.0) (2026-08-05)
+
+
+### Features
+
+* add ledger import-claude-code — pull activity from local transcripts ([26c2504](https://github.com/ketriumlabs/agent-activity-ledger/commit/26c2504687244dac69e1c82e7b23fb6b4becdac9))
+* initial ledger MVP — hash-chained event ingest, timeline UI, demo mode ([061b350](https://github.com/ketriumlabs/agent-activity-ledger/commit/061b3502b9a06d01780852d5144ee248a902a95c))
+
+
+### Bug Fixes
+
+* catch raw HTTPException (malformed JSON body, 405 Allow header) ([2d77687](https://github.com/ketriumlabs/agent-activity-ledger/commit/2d776874a1e983bd38c5f5ea2a65f5a708460b50))
+* schemathesis-found API contract bugs; add fuzz testing to CI ([8005042](https://github.com/ketriumlabs/agent-activity-ledger/commit/8005042ed6f0af8ed22aa651eddac61dfc193311))
+
+
+### Documentation
+
+* add README badges; fix docker compose demo mode default ([1077ea8](https://github.com/ketriumlabs/agent-activity-ledger/commit/1077ea8146aa694f4b698ebcf3212e814d6fc2fe))
+
 ## [Unreleased]
 
 ### Added
