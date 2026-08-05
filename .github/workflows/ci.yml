@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2 # v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install uv
+        uses: astral-sh/setup-uv@f0ec1fc3b38f5e7cd731bb6ce540c5af426746bb # v5
+      - name: Install dependencies
+        run: uv pip install --system -e ".[dev]"
+      - name: Lint (ruff)
+        run: |
+          ruff check .
+          ruff format --check .
+      - name: Type check (mypy)
+        run: mypy src/ledger
+      - name: Test with coverage
+        run: pytest --cov --cov-report=term-missing
+      - name: Validate agent-event schema examples
+        run: python scripts/validate_schema_examples.py
+
+  docker-smoke-test:
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: Build image
+        run: docker build -t agent-activity-ledger:ci .
+      - name: Run demo container and smoke test
+        run: |
+          docker run -d --name ledger-ci -p 8420:8420 -e DEMO=1 agent-activity-ledger:ci
+          for i in $(seq 1 20); do
+            if curl -sf http://127.0.0.1:8420/healthz; then break; fi
+            sleep 1
+          done
+          curl -sf http://127.0.0.1:8420/healthz
+          curl -sf http://127.0.0.1:8420/v1/verify -H "Authorization: Bearer demo" || true
+          docker logs ledger-ci
+          docker stop ledger-ci

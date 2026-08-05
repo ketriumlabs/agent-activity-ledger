@@ -1,0 +1,8 @@
+{
+  "ts": "2026-08-05T14:03:22Z",
+  "actor": { "agent": "calendar-agent" },
+  "action": { "type": "schedule", "verb": "Scheduled dentist appointment" },
+  "target": "calendly.com",
+  "justification": "User asked to book the next available slot",
+  "source": { "integration": "mcp" }
+}

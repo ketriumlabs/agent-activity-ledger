@@ -1,0 +1,7 @@
+{
+  "ts": "2026-08-05T14:03:22Z",
+  "actor": { "agent": "travel-bot", "session": "run-uuid" },
+  "action": { "type": "purchase", "verb": "Called book_flight: {\"origin\": \"BLR\"}" },
+  "target": "https://makemytrip.com",
+  "source": { "integration": "langchain", "version": "0.1.0" }
+}

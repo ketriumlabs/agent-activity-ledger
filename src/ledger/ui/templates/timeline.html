@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agent Activity Ledger</title>
+  <script src="https://unpkg.com/htmx.org@2.0.3" integrity="sha384-BBDmZzVt6vjz5YbEqZPjO2X8kzTvzQii0i5Oxq9RTeYycb1jl9UtSQpwaN0sAe+I" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <h1>🧾 Agent Activity Ledger</h1>
+    <p class="tagline">A bank statement for everything your AI agents did.</p>
+  </header>
+
+  <form class="filters" method="get" action="/">
+    <label>
+      Agent
+      <select name="agent">
+        <option value="">All</option>
+        {% for a in agents %}
+        <option value="{{ a }}" {% if a == filter_agent %}selected{% endif %}>{{ a }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>
+      Type
+      <select name="type">
+        <option value="">All</option>
+        {% for t in ["purchase", "email.send", "message.send", "file.write", "http.request", "auth", "schedule", "custom"] %}
+        <option value="{{ t }}" {% if t == filter_type %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="checkbox">
+      <input type="checkbox" name="money" value="true" {% if filter_money %}checked{% endif %} />
+      Money-touching only
+    </label>
+    <button type="submit">Filter</button>
+  </form>
+
+  <ol class="timeline">
+    {% for e in events %}
+    <li class="event {% if e.amount %}money{% endif %}">
+      <div class="event-time">{{ e.ts.strftime("%Y-%m-%d %H:%M") }}</div>
+      <div class="event-body">
+        <span class="agent-badge">{{ e.actor.agent }}</span>
+        <span class="verb">{{ e.action.verb }}</span>
+        {% if e.target %}<span class="target">→ {{ e.target }}</span>{% endif %}
+        {% if e.amount %}<span class="amount">{{ e.amount.value }} {{ e.amount.currency }}</span>{% endif %}
+        {% if e.justification %}<div class="justification">"{{ e.justification }}"</div>{% endif %}
+      </div>
+    </li>
+    {% else %}
+    <li class="empty">No events yet. POST to <code>/v1/events</code> to get started, or run with <code>--demo</code>.</li>
+    {% endfor %}
+  </ol>
+</body>
+</html>

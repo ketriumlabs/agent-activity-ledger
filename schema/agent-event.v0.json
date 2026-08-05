@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ketriumlabs.dev/schema/agent-event.v0.json",
+  "title": "Ketrium Agent Event v0",
+  "description": "Shared event schema for the ketriumlabs 'trust layer for the agent era' portfolio. Additive-only within v0 — breaking changes require a new versioned file.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["ts", "actor", "action", "source"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Server-assigned UUIDv7. Clients must not set this."
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time",
+      "description": "RFC 3339 timestamp of when the action occurred, set by the client."
+    },
+    "received_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Server-assigned ingest time. Clients must not set this."
+    },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["agent"],
+      "properties": {
+        "agent": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "session": { "type": "string", "maxLength": 200 },
+        "model": { "type": "string", "maxLength": 200 }
+      }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "verb"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "purchase",
+            "email.send",
+            "message.send",
+            "file.write",
+            "http.request",
+            "auth",
+            "schedule",
+            "custom"
+          ]
+        },
+        "verb": { "type": "string", "minLength": 1, "maxLength": 500 }
+      }
+    },
+    "target": { "type": "string", "maxLength": 500 },
+    "amount": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "currency"],
+      "properties": {
+        "value": { "type": "number" },
+        "currency": { "type": "string", "minLength": 3, "maxLength": 3 }
+      }
+    },
+    "justification": { "type": "string", "maxLength": 2000 },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["integration"],
+      "properties": {
+        "integration": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "version": { "type": "string", "maxLength": 50 }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Free-form, size-capped at 8KB when serialized."
+    },
+    "prev_hash": {
+      "type": "string",
+      "description": "Server-computed. Clients must not set this."
+    },
+    "hash": {
+      "type": "string",
+      "description": "Server-computed. Clients must not set this."
+    }
+  }
+}

@@ -1,0 +1,18 @@
+services:
+  ledger:
+    build: .
+    image: ghcr.io/ketriumlabs/agent-activity-ledger:latest
+    ports:
+      - "8420:8420"
+    environment:
+      - LEDGER_HOST=0.0.0.0
+      - DEMO=${DEMO:-}
+      # - LEDGER_SMTP_HOST=smtp.example.com
+      # - LEDGER_SMTP_USER=
+      # - LEDGER_SMTP_PASSWORD=
+      # - LEDGER_DIGEST_TO=
+    volumes:
+      - ledger-data:/data
+
+volumes:
+  ledger-data:

@@ -1,0 +1,23 @@
+name: Feature request
+description: Suggest something new for the ledger
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: false
+  - type: checkboxes
+    id: scope-check
+    attributes:
+      label: Scope check
+      options:
+        - label: I've checked plan.md's MVP cut-line — this isn't multi-user, OAuth, a mobile app, or real-time websockets
+          required: true

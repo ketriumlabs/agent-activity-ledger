@@ -1,0 +1,6 @@
+{
+  "ts": "2026-08-05T14:03:22Z",
+  "actor": { "agent": "claude-code", "session": "sess_abc123" },
+  "action": { "type": "custom", "verb": "Ran: npm install" },
+  "source": { "integration": "claude-code-hook", "version": "0.1.0" }
+}

@@ -1,0 +1,75 @@
+:root {
+  --bg: #0f1115;
+  --panel: #161922;
+  --text: #e8e8ec;
+  --muted: #8a8f9c;
+  --accent: #5b8cff;
+  --money: #ffb020;
+  --border: #262a35;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 1.5rem;
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  max-width: 860px;
+  margin-inline: auto;
+}
+
+header h1 { margin-bottom: 0.1rem; }
+.tagline { color: var(--muted); margin-top: 0; }
+
+.filters {
+  display: flex;
+  gap: 1rem;
+  align-items: end;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.filters label { display: flex; flex-direction: column; font-size: 0.85rem; color: var(--muted); gap: 0.25rem; }
+.filters label.checkbox { flex-direction: row; align-items: center; gap: 0.4rem; }
+.filters select, .filters button {
+  background: #1e2230; color: var(--text); border: 1px solid var(--border);
+  border-radius: 6px; padding: 0.4rem 0.6rem;
+}
+.filters button { cursor: pointer; background: var(--accent); border: none; color: white; font-weight: 600; }
+
+.timeline { list-style: none; padding: 0; }
+
+.event {
+  display: flex;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.event.money {
+  background: linear-gradient(90deg, rgba(255, 176, 32, 0.08), transparent);
+  border-left: 3px solid var(--money);
+}
+
+.event-time { color: var(--muted); font-size: 0.8rem; white-space: nowrap; min-width: 7.5rem; }
+
+.agent-badge {
+  background: #1e2230; border: 1px solid var(--border);
+  border-radius: 999px; padding: 0.1rem 0.6rem; font-size: 0.75rem; margin-right: 0.5rem;
+}
+
+.amount { color: var(--money); font-weight: 700; margin-left: 0.5rem; }
+.target { color: var(--muted); margin-left: 0.4rem; }
+.justification { color: var(--muted); font-size: 0.85rem; margin-top: 0.25rem; font-style: italic; }
+
+.empty { color: var(--muted); padding: 2rem 0; text-align: center; }
+
+code {
+  background: #1e2230; padding: 0.1rem 0.35rem; border-radius: 4px; font-size: 0.85em;
+}
