@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Schemathesis fuzz testing of the live OpenAPI surface, wired into CI.
 - `.pre-commit-config.yaml` (ruff, ruff-format, mypy) — install with
   `pre-commit install`.
+- `uv.lock` committed for reproducible installs; CI now fails if it drifts
+  from `pyproject.toml` (`uv lock --check`).
 
 ### Fixed
 - `GET /v1/events` with a malformed query param (e.g. `ts_to=null`) returned

@@ -21,6 +21,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install uv
         uses: astral-sh/setup-uv@f0ec1fc3b38f5e7cd731bb6ce540c5af426746bb # v5
+      - name: Check uv.lock is up to date
+        run: uv lock --check
       - name: Install dependencies
         run: uv pip install --system -e ".[dev]"
       - name: Lint (ruff)
