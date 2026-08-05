@@ -55,3 +55,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   *definition* time, so `ledger serve --port/--host` (which sets the env var
   right before constructing `Settings()`) was silently ignored — switched to
   `default_factory` so each `Settings()` reads the current environment.
+- A malformed (syntactically broken, not just semantically invalid) JSON
+  request body was rejected by Starlette itself before reaching our code,
+  bypassing our RFC 9457 problem+json handlers entirely; added a handler
+  for the underlying `HTTPException` (also documented the resulting 400 on
+  `POST /v1/events`, which FastAPI doesn't auto-document since it's not one
+  of our own declared responses). Found by schemathesis running in CI — a
+  different random seed than any of my local runs had hit.
+- The fix above initially dropped the RFC 9110-required `Allow` header
+  that Starlette normally attaches to a 405 Method Not Allowed response,
+  since building a response from scratch doesn't carry it over; caught by
+  re-running schemathesis immediately after the first fix landed.

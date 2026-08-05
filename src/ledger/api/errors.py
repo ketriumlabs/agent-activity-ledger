@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from http import HTTPStatus
+
 from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 
 class ProblemError(Exception):
@@ -21,7 +25,7 @@ class ProblemError(Exception):
         self.type_ = type_
         super().__init__(detail or title)
 
-    def to_response(self) -> JSONResponse:
+    def to_response(self, headers: Mapping[str, str] | None = None) -> JSONResponse:
         body = {"type": self.type_, "title": self.title, "status": self.status}
         if self.detail:
             body["detail"] = self.detail
@@ -29,6 +33,7 @@ class ProblemError(Exception):
             status_code=self.status,
             content=body,
             media_type="application/problem+json",
+            headers=headers,
         )
 
 
@@ -47,6 +52,23 @@ async def request_validation_error_handler(request: Request, exc: Exception) -> 
     """
     assert isinstance(exc, RequestValidationError)
     return ProblemError(422, "Unprocessable Content", str(exc.errors())).to_response()
+
+
+async def http_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Starlette raises its own HTTPException outside our code entirely for
+    things like a malformed (not just invalid, actually unparseable) JSON
+    request body, or an unmatched route — neither ProblemError nor
+    RequestValidationError covers those, so without this they'd fall back to
+    Starlette's default `{"detail": "..."}` shape. Found by schemathesis
+    fuzzing the live API with garbage request bodies. exc.headers is passed
+    through — for a 405, Starlette's router sets an RFC 9110-required
+    `Allow` header there, which a from-scratch response would otherwise
+    silently drop (also found by schemathesis, on the very next run).
+    """
+    assert isinstance(exc, StarletteHTTPException)
+    detail = exc.detail if isinstance(exc.detail, str) else str(exc.detail)
+    title = HTTPStatus(exc.status_code).phrase
+    return ProblemError(exc.status_code, title, detail).to_response(headers=exc.headers)
 
 
 def unauthorized(detail: str = "Missing or invalid API key") -> ProblemError:

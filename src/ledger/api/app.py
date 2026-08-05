@@ -10,9 +10,15 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.utils import get_openapi
 from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from ledger.api import health, ingest, query, verify
-from ledger.api.errors import ProblemError, problem_error_handler, request_validation_error_handler
+from ledger.api.errors import (
+    ProblemError,
+    http_exception_handler,
+    problem_error_handler,
+    request_validation_error_handler,
+)
 from ledger.config import Settings, get_settings
 from ledger.demo import seed_demo_data
 from ledger.digest import start_scheduler
@@ -57,6 +63,13 @@ def _custom_openapi(app: FastAPI) -> dict[str, Any]:
     # `{}` slipped through generators because they treated the branches as
     # independent alternatives). Overwrite it wholesale here instead.
     schema["paths"]["/v1/events"]["post"]["requestBody"] = ingest.INGEST_REQUEST_BODY
+    # A malformed (not just invalid, actually unparseable) JSON body is
+    # rejected by Starlette itself as 400, before our route ever runs — a
+    # real, unavoidable response FastAPI doesn't auto-document since it
+    # only knows about our own declared responses.
+    schema["paths"]["/v1/events"]["post"]["responses"]["400"] = {
+        "description": "Malformed request body"
+    }
     for path_item in schema.get("paths", {}).values():
         for operation in path_item.values():
             for status_code, response in operation.get("responses", {}).items():
@@ -115,6 +128,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app.add_exception_handler(ProblemError, problem_error_handler)
     app.add_exception_handler(RequestValidationError, request_validation_error_handler)
+    app.add_exception_handler(StarletteHTTPException, http_exception_handler)
     app.openapi = lambda: _custom_openapi(app)  # type: ignore[method-assign]
 
     app.include_router(health.router)
