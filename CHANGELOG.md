@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Both the PyPI artifacts and the Docker image get build-provenance
   attestations (`actions/attest-build-provenance`); the Docker image also
   gets an SPDX SBOM (syft).
+- OpenSSF Scorecard workflow (weekly + on push to main), results published
+  to the Scorecard API and uploaded to code scanning.
 
 ### Fixed
 - `GET /v1/events` with a malformed query param (e.g. `ts_to=null`) returned
