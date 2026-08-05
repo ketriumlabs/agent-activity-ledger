@@ -41,6 +41,7 @@ dev = [
   "schemathesis>=3.39",
   "mypy>=1.13",
   "ruff>=0.7",
+  "pre-commit>=4.0",
   "jsonschema[format]>=4.23",
 ]
 

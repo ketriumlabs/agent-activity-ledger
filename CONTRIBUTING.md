@@ -12,6 +12,12 @@ uv pip install -e ".[dev]"
 pytest
 ```
 
+Optionally install the pre-commit hooks so `ruff`/`mypy` run automatically on `git commit`:
+
+```bash
+pre-commit install
+```
+
 ## Running the ledger locally
 
 ```bash
