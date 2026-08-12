@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM python:3.12-slim AS builder
+FROM python:3.14-slim AS builder
 
 WORKDIR /build
 COPY pyproject.toml README.md ./
@@ -8,7 +8,7 @@ COPY schema ./schema
 
 RUN pip install --no-cache-dir --prefix=/install .
 
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 RUN useradd --create-home --uid 1000 ledger
 COPY --from=builder /install /usr/local
