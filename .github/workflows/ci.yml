@@ -68,6 +68,9 @@ jobs:
         # strings that legitimately fail to parse. All other checks
         # (negative_data_rejection, response/status/content-type
         # conformance, server errors) still run.
+        env:
+          PYTHONPATH: scripts
+          SCHEMATHESIS_HOOKS: schemathesis_hooks
         run: |
           st run http://127.0.0.1:8420/openapi.json \
             --header "Authorization: Bearer demo" \

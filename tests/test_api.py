@@ -172,6 +172,26 @@ async def test_query_param_validation_error_uses_problem_json(client: httpx.Asyn
     assert body["status"] == 422
 
 
+async def test_query_rejects_numeric_datetime_timestamp(client: httpx.AsyncClient) -> None:
+    resp = await client.get("/v1/events?ts_to=0.5", headers={"Authorization": "Bearer test-key"})
+    assert resp.status_code == 422
+    assert resp.headers["content-type"] == "application/problem+json"
+
+
+async def test_query_accepts_iso_datetime(client: httpx.AsyncClient) -> None:
+    resp = await client.get(
+        "/v1/events?ts_to=2026-08-05T14:03:22Z",
+        headers={"Authorization": "Bearer test-key"},
+    )
+    assert resp.status_code == 200
+
+
+async def test_options_allow_lists_all_event_methods(client: httpx.AsyncClient) -> None:
+    resp = await client.options("/v1/events")
+    assert resp.status_code == 405
+    assert resp.headers["allow"] == "GET, POST"
+
+
 async def test_ingest_empty_body_returns_422_matching_documented_contract(
     client: httpx.AsyncClient,
 ) -> None:

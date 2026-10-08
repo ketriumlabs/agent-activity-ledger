@@ -81,7 +81,12 @@ def _validate_metadata_size(event: EventIn) -> None:
         raise validation_problem("metadata exceeds 8KB size cap")
 
 
-@router.post("/v1/events", status_code=201, dependencies=[Depends(require_api_key)])
+@router.post(
+    "/v1/events",
+    status_code=201,
+    dependencies=[Depends(require_api_key)],
+    responses={409: {"description": "Idempotency key reused with a different event payload"}},
+)
 def ingest_events(
     payload: dict[str, Any] | list[dict[str, Any]],
     repo: Annotated[EventRepository, Depends(get_repository)],
