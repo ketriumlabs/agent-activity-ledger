@@ -90,6 +90,40 @@ async def test_idempotency_key_dedupes_over_http(client: httpx.AsyncClient) -> N
     assert second.json()["deduped"] is True
 
 
+async def test_idempotency_key_payload_conflict_over_http(client: httpx.AsyncClient) -> None:
+    headers = {"Authorization": "Bearer test-key", "Idempotency-Key": "abc-123"}
+    first = await client.post("/v1/events", json=VALID_EVENT, headers=headers)
+    changed = {**VALID_EVENT, "actor": {"agent": "different-agent"}}
+    conflict = await client.post("/v1/events", json=changed, headers=headers)
+    assert first.status_code == 201
+    assert conflict.status_code == 409
+    assert conflict.headers["content-type"] == "application/problem+json"
+    assert conflict.json()["title"] == "Conflict"
+    assert "different event payload" in conflict.json()["detail"]
+
+
+async def test_batch_idempotency_key_scopes_items_and_detects_changed_item(
+    client: httpx.AsyncClient,
+) -> None:
+    headers = {"Authorization": "Bearer test-key", "Idempotency-Key": "batch-1"}
+    batch = [VALID_EVENT, {**VALID_EVENT, "actor": {"agent": "second-agent"}}]
+    first = await client.post("/v1/events", json=batch, headers=headers)
+    retry = await client.post("/v1/events", json=batch, headers=headers)
+    changed_batch = [batch[0], {**VALID_EVENT, "actor": {"agent": "changed-agent"}}]
+    changed = await client.post("/v1/events", json=changed_batch, headers=headers)
+
+    assert len(first.json()["accepted"]) == 2
+    assert len(retry.json()["accepted"]) == 2
+    assert all(item["deduped"] for item in retry.json()["accepted"])
+    assert len(changed.json()["accepted"]) == 1
+    assert changed.json()["errors"] == [
+        {
+            "index": "1",
+            "detail": "idempotency key was already used for a different event payload",
+        }
+    ]
+
+
 async def test_query_events(client: httpx.AsyncClient) -> None:
     headers = {"Authorization": "Bearer test-key"}
     await client.post("/v1/events", json=VALID_EVENT, headers=headers)

@@ -79,6 +79,10 @@ def not_found(detail: str = "Resource not found") -> ProblemError:
     return ProblemError(404, "Not Found", detail)
 
 
+def conflict_problem(detail: str) -> ProblemError:
+    return ProblemError(409, "Conflict", detail)
+
+
 def validation_problem(detail: str) -> ProblemError:
     # 422, not 400: FastAPI auto-documents every endpoint's request-body
     # validation failure as 422 in the generated OpenAPI spec (it adds this
