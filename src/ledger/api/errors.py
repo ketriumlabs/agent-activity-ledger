@@ -68,7 +68,12 @@ async def http_exception_handler(request: Request, exc: Exception) -> JSONRespon
     assert isinstance(exc, StarletteHTTPException)
     detail = exc.detail if isinstance(exc.detail, str) else str(exc.detail)
     title = HTTPStatus(exc.status_code).phrase
-    return ProblemError(exc.status_code, title, detail).to_response(headers=exc.headers)
+    headers = dict(exc.headers or {})
+    if exc.status_code == 405 and request.method == "OPTIONS" and request.url.path == "/v1/events":
+        # Starlette reports only the first same-path route's methods for this
+        # automatic 405. The endpoint also has GET, registered separately.
+        headers["Allow"] = "GET, POST"
+    return ProblemError(exc.status_code, title, detail).to_response(headers=headers)
 
 
 def unauthorized(detail: str = "Missing or invalid API key") -> ProblemError:
@@ -77,6 +82,10 @@ def unauthorized(detail: str = "Missing or invalid API key") -> ProblemError:
 
 def not_found(detail: str = "Resource not found") -> ProblemError:
     return ProblemError(404, "Not Found", detail)
+
+
+def conflict_problem(detail: str) -> ProblemError:
+    return ProblemError(409, "Conflict", detail)
 
 
 def validation_problem(detail: str) -> ProblemError:

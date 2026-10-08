@@ -104,7 +104,15 @@ class EventRepository:
                     (event.source.integration, idempotency_key),
                 ).fetchone()
                 if existing is not None:
-                    return InsertResult(record=row_to_record(existing), deduped=True)
+                    stored = row_to_record(existing)
+                    stored_input = EventIn.model_validate(
+                        stored.model_dump(exclude={"id", "received_at", "prev_hash", "hash"})
+                    )
+                    if stored_input != event:
+                        raise IdempotencyConflict(
+                            "idempotency key was already used for a different event payload"
+                        )
+                    return InsertResult(record=stored, deduped=True)
 
             prev_hash = self.head_hash()
             event_id = _uuid7()

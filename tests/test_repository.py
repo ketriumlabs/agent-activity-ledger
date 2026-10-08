@@ -5,7 +5,7 @@ from decimal import Decimal
 
 from ledger.core.chain import verify_chain
 from ledger.core.events import Action, Actor, Amount, EventIn, Source
-from ledger.store.repository import EventRepository
+from ledger.store.repository import EventRepository, IdempotencyConflict
 
 
 def _event(agent: str = "test-agent", amount: str | None = None) -> EventIn:
@@ -50,6 +50,17 @@ def test_idempotency_key_dedupes(repo: EventRepository) -> None:
     assert not first.deduped
     assert second.deduped
     assert first.record.id == second.record.id
+    assert repo.count() == 1
+
+
+def test_idempotency_key_conflicts_for_different_payload(repo: EventRepository) -> None:
+    repo.insert(_event(agent="original"), idempotency_key="key-1")
+    try:
+        repo.insert(_event(agent="changed"), idempotency_key="key-1")
+    except IdempotencyConflict as exc:
+        assert "different event payload" in str(exc)
+    else:
+        raise AssertionError("reusing a key for a different payload must conflict")
     assert repo.count() == 1
 
 
